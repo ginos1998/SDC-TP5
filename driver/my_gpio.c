@@ -1,11 +1,11 @@
 /***************************************************************************//**
 *  \file       driver.c
 *
-*  \details    Simple GPIO driver explanation
+*  \details    GPIO Driver TP5 SC
 *
-*  \author     EmbeTronicX
+*  \author     Los borobotones
 *
-*  \Tested with Linux raspberrypi 5.4.51-v7l+
+*  \Tested with Linux raspberrypi 
 *
 *******************************************************************************/
 #include <linux/kernel.h>
@@ -16,21 +16,21 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/delay.h>
-#include <linux/uaccess.h>  
+#include <linux/uaccess.h> 
+#include <linux/gpio.h>     
 #include <linux/err.h>
-//LED is connected to this GPIO
-#define GPIO_23 (23)
-#define GPIO_21 (21)
-
+#define GPIO_BUTTOM (23)
+#define GPIO_ALCOHOLMETER (21)
  
 dev_t dev = 0;
 static struct class *dev_class;
 static struct cdev my_gpio_cdev;
+
+static int __init my_gpio_driver_init(void);
+static void __exit my_gpio_driver_exit(void);
  
-static int __init etx_driver_init(void);
-static void __exit etx_driver_exit(void);
- 
- 
+uint8_t selected_pin = GPIO_BUTTOM;
+
 /*************** Driver functions **********************/
 static int my_gpio_open(struct inode *inode, struct file *file);
 static int my_gpio_release(struct inode *inode, struct file *file);
@@ -62,13 +62,48 @@ static int my_gpio_release(struct inode *inode, struct file *file)
 
 static ssize_t my_gpio_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
 {
+    int gpio_state = 0;
+    char gpio_message[32];
+    int nr_bytes;
 
+    if ((*off) > 0)
+      return 0;
+
+    gpio_state = gpio_get_value(selected_pin);
+
+    if (selected_pin == GPIO_BUTTOM)
+        snprintf(gpio_message, sizeof(gpio_message), "BOTON: %d\n", gpio_state);
+    else
+        snprintf(gpio_message, sizeof(gpio_message), "ALCOHOLIMETRO: %d\n", gpio_state);
+
+    nr_bytes = strlen(gpio_message);
+
+    if (copy_to_user(buf, gpio_message, nr_bytes) != 0) {
+        pr_err("ERROR: No se pudo copiar todos los bytes al usuario\n");
+        return -EFAULT;
+    }
+
+    pr_info("%s", gpio_message);
+
+    (*off) += nr_bytes;
+    return nr_bytes;
 }
 
 
 static ssize_t my_gpio_write(struct file *filp, const char __user *buf, size_t len, loff_t *off)
 {
+    uint8_t user_input[10] = {0};
+    if(copy_from_user(user_input, buf, len ) > 0) 
+        pr_err("ERROR: No se pudo leer la informacion del usuario correctamente\n");
 
+    if(user_input[0]=='0')
+        selected_pin = GPIO_BUTTOM;
+    else if (user_input[0]=='1')
+        selected_pin = GPIO_ALCOHOLMETER;
+    else
+        pr_err("Error: input de selección no valido: 0 para botón, 1 para alcholimetro");
+
+    return len;
 }
 
 static int __init my_gpio_driver_init(void){
@@ -96,54 +131,49 @@ static int __init my_gpio_driver_init(void){
         goto r_device;
     }
 
-    if(gpio_is_valid(GPIO_23) == false){
-        pr_err("GPIO %d no es valido\n", GPIO_23);
+    if(gpio_is_valid(GPIO_BUTTOM) == false){
+        pr_err("GPIO %d no es valido\n", GPIO_BUTTOM);
         goto r_device;
     }
-    if (gpio_is_valid(GPIO_21) == false){
-        pr_err("GPIO %d no es valido\n", GPIO_21);
+    if (gpio_is_valid(GPIO_ALCOHOLMETER) == false){
+        pr_err("GPIO %d no es valido\n", GPIO_ALCOHOLMETER);
         goto r_device;
     }
 
-    if(gpio_request(GPIO_23,"GPIO_23") < 0){
-        pr_err("ERROR: GPIO %d request\n", GPIO_23);
+    if(gpio_request(GPIO_BUTTOM,"GPIO_23") < 0){
+        pr_err("ERROR: GPIO %d request\n", GPIO_BUTTOM);
         goto r_gpio;
     }
-    if(gpio_request(GPIO_21,"GPIO_21") < 0){
-        pr_err("ERROR: GPIO %d request\n", GPIO_21);
+    if(gpio_request(GPIO_ALCOHOLMETER,"GPIO_21") < 0){
+        pr_err("ERROR: GPIO %d request\n", GPIO_ALCOHOLMETER);
         goto r_gpio;
     }
 
-    gpio_direction_input(GPIO_23);
-    gpio_direction_input(GPIO_21);
-
-    gpio_export(GPIO_21, false);
-    gpio_export(GPIO_23, false);    
+    gpio_direction_input(GPIO_BUTTOM);
+    gpio_direction_input(GPIO_ALCOHOLMETER);
 
     pr_info("Device Driver configurado\n");
     return 0;
 
-    rgpio:
-    gpio_free(GPIO_21);
-    gpio_free(GPIO_23);
-    rdevice:
-    device_destroy(dev_class,dev);
-    rclass:
-    class_destroy(dev_class);
-    rdel:
-    cdev_del(&my_gpio_cdev);
-    runreg:
-    unregister_chrdev_region(dev,1);
+    r_gpio:
+        gpio_free(GPIO_ALCOHOLMETER);
+        gpio_free(GPIO_BUTTOM);
+    r_device:
+        device_destroy(dev_class,dev);
+    r_class:
+        class_destroy(dev_class);
+    r_del:
+        cdev_del(&my_gpio_cdev);
+    r_unreg:
+        unregister_chrdev_region(dev,1);
 
     return -1;
 }
 
 static void __exit my_gpio_driver_exit(void)
 {
-    gpio_unexport(GPIO_21);
-    gpio_unexport(GPIO_23);
-    gpio_free(GPIO_21);
-    gpio_free(GPIO_23);
+    gpio_free(GPIO_ALCOHOLMETER);
+    gpio_free(GPIO_BUTTOM);
     device_destroy(dev_class,dev);
     class_destroy(dev_class);
     cdev_del(&my_gpio_cdev);
