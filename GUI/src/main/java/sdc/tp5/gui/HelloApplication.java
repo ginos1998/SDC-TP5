@@ -1,5 +1,6 @@
 package sdc.tp5.gui;
 
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -19,13 +20,19 @@ import sdc.tp5.gui.utils.Constants;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HelloApplication extends Application {
 
   private XYChart.Series<Number, Number> series;
+  private LineChart<Number, Number> lineChart;
   private long startTime;
+  private Map<String, String> dataOption;
+  private String currentTitle;
+  private Timeline timeline;
 
   @Override
   public void start(Stage primaryStage) {
@@ -35,8 +42,8 @@ public class HelloApplication extends Application {
     NumberAxis xAxis = new NumberAxis();
     NumberAxis yAxis = new NumberAxis();
 
-    LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
-    lineChart.setTitle(Constants.GRAPH_TITLE);
+    lineChart = new LineChart<>(xAxis, yAxis);
+    lineChart.setTitle(Constants.GRAPH_TITLE_AV_RAM);
     lineChart.setAnimated(false);
 
     series = new XYChart.Series<>();
@@ -44,7 +51,9 @@ public class HelloApplication extends Application {
 
     // Crear los botones A y B
     Button buttonA = new Button(Constants.BUTTON_A);
+    buttonA.setOnAction(event -> handleButtonAClick());
     Button buttonB = new Button(Constants.BUTTON_B);
+    buttonB.setOnAction(event -> handleButtonBClick());
 
     // Crear la subventana superior con los botones
     HBox buttonBox = new HBox(10, buttonA, buttonB);
@@ -70,11 +79,21 @@ public class HelloApplication extends Application {
 
     startTime = System.currentTimeMillis();
 
+    dataOption = new HashMap<>();
+    dataOption.put(Constants.GRAPH_TITLE_AV_RAM, "MemAvailable:");
+    dataOption.put(Constants.GRAPH_TITLE_FREE_RAM, "MemFree:");
+
+    currentTitle = Constants.GRAPH_TITLE_AV_RAM;
+
     // Iniciar la actualización del gráfico en tiempo real
-    Timeline timeline = new Timeline(new KeyFrame(Duration.millis(Constants.UPDATE_INTERVAL_MS), event -> {
+    initRealTimeGraph();
+  }
+
+  private void initRealTimeGraph() {
+    timeline = new Timeline(new KeyFrame(Duration.millis(Constants.UPDATE_INTERVAL_MS), event -> {
       updateChartData();
     }));
-    timeline.setCycleCount(Timeline.INDEFINITE);
+    timeline.setCycleCount(Animation.INDEFINITE);
     timeline.play();
   }
 
@@ -82,7 +101,7 @@ public class HelloApplication extends Application {
     try (BufferedReader reader = new BufferedReader(new FileReader(Constants.FILE_PATH))) {
       String line;
       while ((line = reader.readLine()) != null) {
-        if (line.startsWith("MemAvailable:")) {
+        if(line.startsWith(dataOption.get(currentTitle))){
           long availableMemoryKB = extractAvailableMemory(line);
           Platform.runLater(() -> {
             long currentTime = System.currentTimeMillis();
@@ -104,6 +123,18 @@ public class HelloApplication extends Application {
       return Long.parseLong(matcher.group(1));
     }
     return 0;
+  }
+
+  private void handleButtonAClick() {
+    currentTitle = Constants.GRAPH_TITLE_AV_RAM;
+    startTime = System.currentTimeMillis();
+    series.getData().clear();
+  }
+
+  private void handleButtonBClick() {
+    currentTitle = Constants.GRAPH_TITLE_FREE_RAM;
+    startTime = System.currentTimeMillis();
+    series.getData().clear();
   }
 
   public static void main(String[] args) {
