@@ -62,26 +62,30 @@ static int my_gpio_release(struct inode *inode, struct file *file)
 
 static ssize_t my_gpio_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
 {
-    char gpio_state_char[3] = "0";
-    int gpio_state = gpio_get_value(selected_pin);
-    sprintf(gpio_state_char, "%d", gpio_state);
-    int nr_bytes = strlen(gpio_state_char);
+    int gpio_state = 0;
+    char gpio_message[32];
+    int nr_bytes;
 
     if ((*off) > 0)
       return 0;
 
-    if (copy_to_user(buf, &gpio_state_char, nr_bytes)) {
+    gpio_state = gpio_get_value(selected_pin);
+
+    if (selected_pin == GPIO_BUTTOM)
+        snprintf(gpio_message, sizeof(gpio_message), "BOTON: %d\n", gpio_state);
+    else
+        snprintf(gpio_message, sizeof(gpio_message), "ALCOHOLIMETRO: %d\n", gpio_state);
+
+    nr_bytes = strlen(gpio_message);
+
+    if (copy_to_user(buf, gpio_message, nr_bytes) != 0) {
         pr_err("ERROR: No se pudo copiar todos los bytes al usuario\n");
         return -EFAULT;
     }
 
-    if (selected_pin == GPIO_BUTTOM)
-        pr_info("Estado del boton = %d\n", gpio_state);
-    else
-        pr_info("Estado del alcoholimetro = %d\n", gpio_state);
+    pr_info("%s", gpio_message);
 
     (*off) += nr_bytes;
-
     return nr_bytes;
 }
 
@@ -148,9 +152,6 @@ static int __init my_gpio_driver_init(void){
     gpio_direction_input(GPIO_BUTTOM);
     gpio_direction_input(GPIO_ALCOHOLMETER);
 
-    gpio_export(GPIO_ALCOHOLMETER, false);
-    gpio_export(GPIO_BUTTOM, false);    
-
     pr_info("Device Driver configurado\n");
     return 0;
 
@@ -171,8 +172,6 @@ static int __init my_gpio_driver_init(void){
 
 static void __exit my_gpio_driver_exit(void)
 {
-    gpio_unexport(GPIO_ALCOHOLMETER);
-    gpio_unexport(GPIO_BUTTOM);
     gpio_free(GPIO_ALCOHOLMETER);
     gpio_free(GPIO_BUTTOM);
     device_destroy(dev_class,dev);
