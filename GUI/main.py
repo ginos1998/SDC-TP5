@@ -8,15 +8,11 @@ file_path = "/home/ginos/sensor"
 
 
 def botonHandler():
-    # pdb.set_trace()
     root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
     num = random.randint(0, 3)
 
-    while num > 0:
-        time.sleep(1)
-        num -= 1
+    root.after(num*1000, lambda: etiqueta.config(text="¡Presiona el botón... AHORAAA!"))
 
-    etiqueta.config(text="presiona el boton...AHORAAA!")
     escribirArchivo("0")
 
 
@@ -78,7 +74,7 @@ def leerArchivo(lectura):
                 if estado == "1":
                     break
 
-        time.sleep(1)
+        time.sleep(0.5)
 
     file.close()
 
