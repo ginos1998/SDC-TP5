@@ -29,11 +29,11 @@ def procesarArchivo(x):
     etiqueta.config(text="")
     root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
 
-    if x == "-1":
+    if x == "-1" or x == -1:
         etiqueta.config(text="UPS! algo salio mal..")
-    elif x == "0":
+    elif x == "0" or x == 0:
         etiqueta.config(text="como te tiene tu jermuu")
-    elif x == "1":
+    elif x == "1" or x == 1:
         etiqueta.config(text="se han tomado todo el vino ohohohh")
 
     root.after(3000, lambda: etiqueta.config(text=""))  # Eliminar el texto después de 3 segundos
