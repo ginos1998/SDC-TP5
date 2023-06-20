@@ -13,7 +13,7 @@ def botonHandler():
     num = random.randint(0, 3)
 
     while num > 0:
-        time.sleep(num)
+        time.sleep(1)
         num -= 1
 
     etiqueta.config(text="presiona el boton...AHORAAA!")
