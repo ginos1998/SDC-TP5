@@ -22,9 +22,9 @@ def procesarBoton(x, tiempo):
     if x == "-1" or x == -1:
         etiqueta.config(text="UPS! algo salio mal..")
     elif x == "0" or x == 0:
-        etiqueta.config(text=lbl_borracho)
+        etiqueta.config(text=lbl_borracho + ", demoraste {} [s]".format(tiempo))
     elif x == "1" or x == 1:
-        etiqueta.config(text="se han tomado todo el vino ohohohh! demoraste {} [s]".format(tiempo))
+        etiqueta.config(text="se han tomado todo el vino ohohohh! Demoraste {} [s]".format(tiempo))
 
     root.after(3000, lambda: etiqueta.config(text=""))  # Eliminar el texto después de 3 segundos
 
