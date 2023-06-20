@@ -1,7 +1,6 @@
 import tkinter as tk
 import time
-import random
-import pdb
+import math
 
 file_path = "/home/ginos/sensor"
 # file_path = "/dev/my_gpio_device"
@@ -20,7 +19,7 @@ def sensorHandler():
 def procesarBoton(x, tiempo):
     etiqueta.config(text="")
     root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
-
+    tiempo = round(tiempo, 2)
     if x == "-1" or x == -1:
         etiqueta.config(text="UPS! algo salio mal..")
     elif x == "0" or x == 0:
@@ -73,7 +72,7 @@ def leerArchivo(lectura):
                 if estado == "1" and content.startswith("BOTON:"):
                     break
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
     file.close()
     time_aux -= 0.040
