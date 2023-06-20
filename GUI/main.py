@@ -2,8 +2,7 @@ import tkinter as tk
 import time
 import math
 
-file_path = "/home/ginos/sensor"
-# file_path = "/dev/my_gpio_device"
+file_path = "/dev/my_gpio_device"
 lbl_borracho = "hoy te portaste bien pibe"
 
 

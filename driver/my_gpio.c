@@ -1,9 +1,9 @@
 /***************************************************************************//**
-*  \file       driver.c
+*  \file       my_gpio.c
 *
 *  \details    GPIO Driver TP5 SC
 *
-*  \author     Los borobotones
+*  \author     Hackbulla
 *
 *  \Tested with Linux raspberrypi 
 *
@@ -46,19 +46,6 @@ static struct file_operations fops =
     .open           = my_gpio_open,
     .release        = my_gpio_release,
 };
-
-static int my_gpio_open(struct inode *inode, struct file *file)
-{
-    pr_info("Abriste el CDF de GPIO!!\n");
-    return 0;
-}
-
-static int my_gpio_release(struct inode *inode, struct file *file)
-{
-    pr_info("Gracias vuelva prontos!!!\n");
-    return 0;
-}
-
 
 static ssize_t my_gpio_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
 {
@@ -180,11 +167,23 @@ static void __exit my_gpio_driver_exit(void)
     unregister_chrdev_region(dev, 1);
     pr_info("Device Derive removido\n");
 }
+
+static int my_gpio_open(struct inode *inode, struct file *file)
+{
+    pr_info("Abriste el CDF de GPIO\n");
+    return 0;
+}
+
+static int my_gpio_release(struct inode *inode, struct file *file)
+{
+    pr_info("Gracias vuelva prontos\n");
+    return 0;
+}
  
 module_init(my_gpio_driver_init);
 module_exit(my_gpio_driver_exit);
  
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Los borbotones - SC");
+MODULE_AUTHOR("Hackbulla - SC");
 MODULE_DESCRIPTION("GPIO driver");
 MODULE_VERSION("1.0");
