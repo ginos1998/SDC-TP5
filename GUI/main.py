@@ -3,9 +3,11 @@ import time
 import random
 
 lectura = "-1"
+file_path = "/home/ginos/sensor"
 
 
 def botonHandler():
+    root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
     lectura = "0"
     etiqueta.config(text="presiona el boton...")
     num = random.randint(0, 10)
@@ -38,8 +40,7 @@ def procesarArchivo(x):
 
 
 def escribirArchivo(opt):
-    with open("/home/ginos/sensor", "w") as file:
-        file.truncate(0)  # limpiamos el contenido del archivo
+    with open(file_path, "w") as file:
         file.write(opt)   # escribimos en el archivo la opcion seleccionada
         file.close()
 
@@ -48,10 +49,11 @@ def escribirArchivo(opt):
 
 def leerArchivo():
     estado = 1
+    estado_aux = 0
     time_aux = 0
     start_time = time.time()
     while time.time() - start_time < 5:
-        with open("/home/ginos/sensor", "r") as file:
+        with open(file_path, "r") as file:
             content = file.read().strip()
             if content.startswith("BOTON:") or content.startswith("ALCOHOLIMETRO:"):
                 estado = content.split(":")[1].strip()
@@ -59,9 +61,14 @@ def leerArchivo():
                 if estado == 0:
                     time_aux = time.time() - start_time
 
+                if estado == 1:
+                    estado_aux = 1
+
         time.sleep(1)
 
     file.close()
+
+    estado = estado_aux
 
     if lectura == 0 and estado == 1:  # si apreto el boton y supero el tiempo de rta (0.5 s)
         estado = 1 if time_aux > 0.5 else 0
