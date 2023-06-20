@@ -1,14 +1,15 @@
 import tkinter as tk
 import time
 import random
+import pdb
 
-lectura = "-1"
-file_path = "/dev/my_gpio_device"
+file_path = "/home/ginos/sensor"
+# file_path = "/dev/my_gpio_device"
 
 
 def botonHandler():
+    # pdb.set_trace()
     root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
-    lectura = "0"
     num = random.randint(0, 3)
 
     while num > 0:
@@ -16,12 +17,11 @@ def botonHandler():
         num -= 1
 
     etiqueta.config(text="presiona el boton...AHORAAA!")
-    escribirArchivo(lectura)
+    escribirArchivo("0")
 
 
 def sensorHandler():
-    lectura = "1"
-    escribirArchivo(lectura)
+    escribirArchivo("1")
 
 
 def procesarBoton(x):
@@ -37,6 +37,7 @@ def procesarBoton(x):
 
     root.after(3000, lambda: etiqueta.config(text=""))  # Eliminar el texto después de 3 segundos
 
+
 def procesarSensor(x):
     etiqueta.config(text="")
     root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
@@ -50,15 +51,16 @@ def procesarSensor(x):
 
     root.after(3000, lambda: etiqueta.config(text=""))  # Eliminar el texto después de 3 segundos
 
+
 def escribirArchivo(opt):
     with open(file_path, "w") as file:
         file.write(opt)   # escribimos en el archivo la opcion seleccionada
         file.close()
 
-    leerArchivo()
+    leerArchivo(opt)
 
 
-def leerArchivo():
+def leerArchivo(lectura):
     estado = 1
     time_aux = 0
     start_time = time.time()
@@ -70,18 +72,18 @@ def leerArchivo():
             if content.startswith("BOTON:") or content.startswith("ALCOHOLIMETRO:"):
                 estado = content.split(":")[1].strip()
 
-                if estado == 0:
+                if estado == "0":
                     time_aux = time.time() - start_time
 
-                if estado == 1:
+                if estado == "1":
                     break
 
         time.sleep(1)
 
     file.close()
 
-    if lectura == "0" and estado == 1:  # si apreto el boton y supero el tiempo de rta (0.5 s)
-        estado = 1 if time_aux > 1 else 0
+    if lectura == "0":  # si apreto el boton y supero el tiempo de rta (1 s)
+        estado = "1" if time_aux > 1 else "0"
 
     if entrada.startswith("BOTON:"):
         procesarBoton(estado)
