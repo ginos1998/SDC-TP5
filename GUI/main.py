@@ -8,12 +8,8 @@ file_path = "/home/ginos/sensor"
 
 
 def botonHandler():
-    root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
-    num = random.randint(0, 3)
-
-    root.after(num*1000, lambda: etiqueta.config(text="¡Presiona el botón... AHORAAA!"))
-
-    escribirArchivo("0")
+    root.after(1000, lambda: etiqueta.config(text="¡Presiona el botón... AHORAAA!"))
+    root.after(1040, lambda: escribirArchivo("0"))
 
 
 def sensorHandler():
@@ -67,7 +63,6 @@ def leerArchivo(lectura):
             entrada = content
             if content.startswith("BOTON:") or content.startswith("ALCOHOLIMETRO:"):
                 estado = content.split(":")[1].strip()
-
                 if estado == "0":
                     time_aux = time.time() - start_time
 
