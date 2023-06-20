@@ -5,6 +5,7 @@ import pdb
 
 file_path = "/home/ginos/sensor"
 # file_path = "/dev/my_gpio_device"
+lbl_borracho = "hoy te portaste bien pibe"
 
 
 def botonHandler():
@@ -16,16 +17,16 @@ def sensorHandler():
     escribirArchivo("1")
 
 
-def procesarBoton(x):
+def procesarBoton(x, tiempo):
     etiqueta.config(text="")
     root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
 
     if x == "-1" or x == -1:
         etiqueta.config(text="UPS! algo salio mal..")
     elif x == "0" or x == 0:
-        etiqueta.config(text="como te tiene tu jermuu")
+        etiqueta.config(text=lbl_borracho)
     elif x == "1" or x == 1:
-        etiqueta.config(text="se han tomado todo el vino ohohohh")
+        etiqueta.config(text="se han tomado todo el vino ohohohh! demoraste {} [s]".format(tiempo))
 
     root.after(3000, lambda: etiqueta.config(text=""))  # Eliminar el texto después de 3 segundos
 
@@ -39,7 +40,7 @@ def procesarSensor(x):
     elif x == "0" or x == 0:
         etiqueta.config(text="se han tomado todo el vino ohohohh")
     elif x == "1" or x == 1:
-        etiqueta.config(text="como te tiene tu jermuu")
+        etiqueta.config(text=lbl_borracho)
 
     root.after(3000, lambda: etiqueta.config(text=""))  # Eliminar el texto después de 3 segundos
 
@@ -53,7 +54,7 @@ def escribirArchivo(opt):
 
 
 def leerArchivo(lectura):
-    estado = 1
+    estado = "1"
     time_aux = 0
     start_time = time.time()
     entrada = ""
@@ -66,18 +67,21 @@ def leerArchivo(lectura):
                 if estado == "0":
                     time_aux = time.time() - start_time
 
-                if estado == "1":
+                if estado == "0" and content.startswith("ALCOHOLIMETRO:"):
+                    break
+
+                if estado == "1" and content.startswith("BOTON:"):
                     break
 
         time.sleep(0.5)
 
     file.close()
-
+    time_aux -= 0.040
     if lectura == "0":  # si apreto el boton y supero el tiempo de rta (1 s)
         estado = "1" if time_aux > 1 else "0"
 
     if entrada.startswith("BOTON:"):
-        procesarBoton(estado)
+        procesarBoton(estado, time_aux)
     elif entrada.startswith("ALCOHOLIMETRO:"):
         procesarSensor(estado)
 
