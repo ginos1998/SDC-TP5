@@ -3,17 +3,17 @@ import time
 import random
 
 lectura = "-1"
-file_path = "/home/ginos/sensor"
+file_path = "/dev/my_gpio_device"
 
 
 def botonHandler():
     root.update_idletasks()  # Actualizar la ventana para que la etiqueta desaparezca de inmediato
     lectura = "0"
     etiqueta.config(text="presiona el boton...")
-    num = random.randint(0, 10)
+    num = random.randint(0, 3)
 
     while num > 0:
-        time.sleep(num/10)
+        time.sleep(num)
         num -= 1
 
     etiqueta.config(text="presiona el boton...AHORAAA!")
